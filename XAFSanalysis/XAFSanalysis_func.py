@@ -623,34 +623,8 @@ class Paramset:
                 F_initial=True
             else:
                 F_initial=False
-                #ipreE1=-200#pre-edge line range
-                #ipreE2=-50
-                #ipostE1=150#post-edge line range
-                #ipostE2=400
-                #inormO=3#normalization order
-                #irbkg1=1.0#Rbkg
-                #ikmin1=0.0#spline range in k
-                #ikmax1=15.0
-                #ikmin2=3.0#FT range in k
-                #ikmax2=9.0
-                #irmin1=1.0#Fitting range in r
-                #irmax1=3.0
-                #ikw=2#Fitting k-weight
         else:
             F_initial=False
-            #ipreE1=-200#pre-edge line range
-            #ipreE2=-50
-            #ipostE1=150#post-edge line range
-            #ipostE2=400
-            #inormO=3#normalization order
-            #irbkg1=1.0#Rbkg
-            #ikmin1=0.0#spline range in k
-            #ikmax1=15.0
-            #ikmin2=3.0#FT range in k
-            #ikmax2=9.0
-            #irmin1=1.0#Fitting range in r
-            #irmax1=3.0
-            #ikw=2#Fitting k-weight
         def saveparam(preE1,preE2,postE1,postE2,e01,normO,rbkg1,kmin1,kmax1,kmin2,kmax2,readfilelist,rmin1,rmax1,kw2):
             rfl1=[]
             rf2=''
