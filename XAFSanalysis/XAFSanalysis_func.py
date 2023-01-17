@@ -14,13 +14,6 @@ import glob
 import itertools
 import numpy as ny
 import copy
-import time, datetime # added fot benchmark on 2202.11.15
-import cProfile, pstats# added fot benchmark on 2202.11.15
-import io as iostream # added fot benchmark on 2202.11.15
-from pstats import SortKey # added fot benchmark on 2202.11.15
-BENCH=True
-PROFILER=True
-PROFILER=False
 session=Interpreter()
 #各種パラメーターの初期値
 ipreE1=-200#pre-edge line range
@@ -267,7 +260,6 @@ def XAFSana_all():
     return d
 
 #XAFSanaのデータのフィッティング
-
 def FEFFfit(d):
     readfile,preE1,preE2,postE1,postE2,e01,normO,rbkg1,kmin1,kmax1,kmin2,kmax2,rmin1,rmax1,kw2=read_arg2()
     No_path, para_name, para_value, para_min, para_max, para_variable, feff_l,para2_u_l,para2_name,para2_value,para2_min,para2_max,para2_variable=read_arg3()
@@ -455,13 +447,7 @@ def FEFFfit(d):
     dataset_l=[]
     for i, g in enumerate(d):
         dset=xafs.feffit_dataset(data=g,pathlist=feff_path_list,transform=trans,_larch=session)
-#        if i != 0:
         fitout=xafs.feffit(pars,dset,_larch=session)
-        if i == 0:
-            pars.a1=param(fitout.params['a1'].value, min=para_min[0][n], max=para_max[0][n], vary=para_variable[0][n])
-            pars.e1=param(fitout.params['e1'].value, min=para_min[1][n], max=para_max[1][n], vary=para_variable[1][n])
-            pars.r1=param(fitout.params['r1'].value, min=para_min[2][n], max=para_max[2][n], vary=para_variable[2][n])
-            pars.s1=param(fitout.params['s1'].value, min=para_min[3][n], max=para_max[3][n], vary=para_variable[3][n])
         g2.append(g)
         for n in range(No_path):#out_l[pathlist][datalist][paramlist]の3次元配列out_l[:,i,8]はR-factor(同じ値)
             #ll=fitout.datasets[0].pathlist[n].label
@@ -615,19 +601,6 @@ class Paramset:
     def __init__(self):
         filelist,filenamelist,savefileD=read_arg1()
         global F_initial
-        ipreE1=-200#pre-edge line range
-        ipreE2=-50
-        ipostE1=150#post-edge line range
-        ipostE2=400
-        inormO=3#normalization order
-        irbkg1=1.0#Rbkg
-        ikmin1=0.0#spline range in k
-        ikmax1=15.0
-        ikmin2=3.0#FT range in k
-        ikmax2=9.0
-        irmin1=1.0#Fitting range in r
-        irmax1=3.0
-        ikw=2#Fitting k-weight
         g=io.read_ascii(filelist[0], labels=['e','xmu'])
         ee0=xafs.find_e0(g.e,g.xmu)
         if os.path.isfile('arg2.csv') == True:#arg2.csvが存在し、同じ吸収端であれば初期値とする。
@@ -867,104 +840,38 @@ class pathlist:
 class fit_all:
     def __init__(self):
         def on_click_ana(clicked_button: Button) -> None:
-            if BENCH == True:
-                start_time = time.perf_counter() # for benchmark on 2202.10.25
-                with open("bench.txt",mode="a+") as bench_file: # for benchmark on 2202.10.25
-                    bench_file.write(f"on_click_ana on {datetime.datetime.now()} \n") # for benchmark on 2202.10.25
-            if PROFILER == True:
-                profiler_date = datetime.datetime.now()
-                fitall_profiler=cProfile.Profile() # for profiler on 2202.10.26
-                fitall_profiler.enable() # for profiler on 2202.10.26
             filelist,filenamelist,savefileD=read_arg1()
             if os.path.isdir(savefileD) == False:
                 os.mkdir(savefileD)
             save_args()
             d=XAFSana_all()
-            if BENCH == True:
-                with open("bench.txt",mode="a+") as bench_file: # for benchmark on 2202.10.25
-                    bench_file.write(f"XAFS_ana_all are called in {time.perf_counter()- start_time }  on {datetime.datetime.now()} \n") # for benchmark on 2202.10.25
             if C1.value==True:
-                if BENCH == True:  # for benchmark on 2202.10.25
-                    start_time_c1 = time.perf_counter()
                 if os.path.isdir(savefileD + '/norm') == False:
                     os.mkdir(savefileD + '/norm')
                 for g, fn in zip(d, filenamelist):
                     ny.savetxt(savefileD+'/norm/norm_'+fn, ny.stack([g.e,g.flat,g.xmu,g.pre_edge,g.post_edge,g.bkg],1),header='energy\tnorm\tmu\tpre_edge\tpost_edge\tbkg', delimiter='\t')
-                if BENCH == True:
-                    end_time = time.perf_counter() # for benchmark on 2202.10.25
-                    differential_time = end_time - start_time 
-                    differential_time_c1 = end_time - start_time_c1
-                    with open("bench.txt",mode="a+") as bench_file:
-                        bench_file.write(f"on_click_ana and C1 are called in {differential_time}, {differential_time_c1}  on {datetime.datetime.now()} \n")     
             if C2.value==True:
-                if BENCH == True: # for benchmark on 2202.10.25
-                    start_time_c2 = time.perf_counter()
                 if os.path.isdir(savefileD + '/chik') == False:
                     os.mkdir(savefileD + '/chik')
                 for g, fn in zip(d, filenamelist):
                     ny.savetxt(savefileD + '/chik/chik_'+fn, ny.stack([g.k,g.chi],1),header='k\tchi',delimiter='\t')
-                if BENCH == True: # for benchmark on 2202.10.25
-                    end_time = time.perf_counter()
-                    differential_time = end_time - start_time 
-                    differential_time_c2 = end_time - start_time_c2
-                    with open("bench.txt",mode="a+") as bench_file:
-                        bench_file.write(f"on_click_ana and C2 are called in {differential_time}, {differential_time_c2}  on {datetime.datetime.now()} \n") 
             if C3.value==True:
-                if BENCH == True:
-                    start_time_c3 = time.perf_counter() # for benchmark on 2202.10.25
                 if os.path.isdir(savefileD + '/FT') == False:
                     os.mkdir(savefileD + '/FT')
                 for g, fn in zip(d, filenamelist):
                     ny.savetxt(savefileD + '/FT/FT_' + fn, ny.stack([g.r,g.chir_mag,g.chir_re,g.chir_im],1),header='FT k-weight='+str(g.xftf_details.call_args.get('kweight'))+'\nr\tchir_mag\tchir_re\tchir_im',delimiter='\t')
-                if BENCH == True: # for benchmark on 2202.10.25
-                    end_time = time.perf_counter() 
-                    differential_time = end_time - start_time 
-                    differential_time_c3 = end_time - start_time_c3
-                    with open("bench.txt",mode="a+") as bench_file: 
-                        bench_file.write(f"on_click_ana and C3 are called in {differential_time}, {differential_time_c3}  on {datetime.datetime.now()} \n") 
             if C4.value==True:
-                if BENCH == True: # for benchmark on 2202.10.25
-                    start_time_c4 = time.perf_counter() # for benchmark on 2202.10.25
                 d, out_l,dset_l=FEFFfit(d)
                 if os.path.isdir(savefileD + '/Fit') == False:
                     os.mkdir(savefileD + '/Fit')
                 for dset, fn in zip(dset_l, filenamelist):
                     ny.savetxt(savefileD + '/Fit/Fit_' + fn, ny.stack([dset.data.r,dset.data.chir_mag,dset.model.r,dset.model.chir_mag],1),header='FT k-weight=' + str(dset.transform.kweight)+'\nr_data chir_mag_data r_model chir_mag_model',delimiter='\t')
-                if BENCH == True: # for benchmark on 2202.10.25
-                    end_time = time.perf_counter() 
-                    differential_time = end_time - start_time
-                    differential_time_c4 = end_time - start_time_c4
-                    with open("bench.txt",mode="a+") as bench_file:
-                        bench_file.write(f"on_click_ana and C4 are called in {differential_time}, {differential_time_c4}  on {datetime.datetime.now()} \n") 
             if C5.value==True:
                 if C4.value==False:
-                    if BENCH == True:  # for benchmark on 2202.10.25
-                        start_time_c4 = time.perf_counter()
                     d,out_l,dset_l=FEFFfit(d)
-                    if BENCH == True:
-                        end_time = time.perf_counter() 
-                        differential_time = end_time - start_time
-                        differential_time_c4 = end_time - start_time_c4
-                        with open("bench.txt",mode="a+") as bench_file: # for benchmark on 2202.10.25
-                            bench_file.write(f"on_click_ana and C4 in C5 are called in {differential_time}, {differential_time_c4}  on {datetime.datetime.now()} \n")
                 No_path=read_arg3()[0]
                 for j in range(No_path):
                     ny.savetxt(savefileD+'/fitting_results_path'+str(j+1)+'.dat',ny.stack([out_l[j,:,0],out_l[j,:,1],out_l[j,:,2],out_l[j,:,3],out_l[j,:,9],out_l[j,:,10],out_l[j,:,11],out_l[j,:,5],out_l[j,:,6],out_l[j,:,7],out_l[j,:,8],out_l[j,:,12],out_l[j,:,13],out_l[j,:,14]],1),header='s02\te0\tdeltar\tsigma2\tthird\tfourth\tei\ts02_stderr\te0_stderr\tdeltar_stderr\tsigma2_stderr\tthird_stderr\tfourth_stderr\tei_stderr',delimiter='\t')
-                if BENCH == True: # for benchmark on 2202.10.25
-                    end_time = time.perf_counter() 
-                    differential_time = end_time - start_time
-                    with open("bench.txt",mode="a+") as bench_file:
-                        bench_file.write(f"on_click_ana is called in {differential_time} on {datetime.datetime.now()} \n") 
-            if PROFILER==True:
-                fitall_profiler.disable() # for profiler on 2202.10.26
-                with open(f"fitall{profiler_date.strftime('%Y%m%d%H%M')}.prof",mode="a+") as fitall_profile:
-                    sortkey = SortKey.CUMULATIVE
-                    ps = pstats.Stats(fitall_profiler, stream=fitall_profile).sort_stats(sortkey)
-                    ps.print_stats()
-                    sortkey = SortKey.TIME 
-                    ps = pstats.Stats(fitall_profiler, stream=fitall_profile).sort_stats(sortkey)
-                    ps.print_callers(.5, 'init')
-                    ps.print_stats(20)
         C1=Checkbox(value=False,description='norm')
         C2=Checkbox(value=False,description='chik')
         C3=Checkbox(value=False,description='FT')
